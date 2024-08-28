@@ -1,0 +1,655 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+<!--Please Use the latest version of integration pom.xml or the one you want to reference to -->
+	<parent>
+		<groupId>com.ericsson.nms</groupId>
+		<artifactId>integration</artifactId>
+		<version>15.2.0.40</version>
+	</parent>
+
+<!-- test push after gerrit migration -->
+
+
+	<groupId>com.ericsson.oss.ci</groupId>
+	<artifactId>ciexe_test</artifactId>
+	<version>2.1.107-SNAPSHOT</version>
+	<packaging>pom</packaging>
+	<name>[${project.artifactId}] JEE6 Project</name>
+
+	<!--Profiles for site documentation-->
+   <properties>
+	<version.wfs>2.10.4</version.wfs>
+   </properties>
+
+	 <!--Profile to deploy latest site-->
+	 <profiles>
+	  <profile>
+	     <id>site_latest</id>
+	        <distributionManagement>
+		       <site>
+		         <id>site</id>
+		         <name>Site</name>
+	                 <url>${site.url}/ciexe_test/latest</url>
+		       </site>
+		</distributionManagement>
+	  </profile>
+
+	 <!--Profile to stage site for review-->
+	 
+	   <profile>
+	      <id>site_review</id>
+	         <distributionManagement>
+		        <site>
+			  <id>site</id>
+			  <name>Site</name>
+		          <url>${site.url}</url>
+		        </site>													                </distributionManagement>
+	   </profile>
+	   </profiles>
+
+															       <!--Deployment of versioned documentation-->	
+															               <distributionManagement>
+		 <site>		
+		     <id>site</id>
+		     <name>Site</name>													            <url>${site.url}/ciexe_test/${project.version}</url>
+		     </site>												       </distributionManagement>
+
+            <modules>
+    		<module>ciexe_test_jar</module>
+            </modules>
+  <scm>
+    <developerConnection>scm:git:ssh://gerrit.ericsson.se:29418/OSS/com.ericsson.oss.ci/ciexe_test</developerConnection>
+    <tag>ciexe_test-2.1.85</tag>
+  </scm>
+
+        <build>
+				<plugins>
+                        <plugin>
+                                <groupId>org.jboss.as.plugins</groupId>
+                                <artifactId>jboss-as-maven-plugin</artifactId>
+                                <configuration>
+                                        <filename>${project.parent.artifactId}.${project.packaging}</filename>
+                                        <skip>false</skip>
+                                </configuration>
+                        </plugin>
+                </plugins>
+        </build>
+        <profiles>
+
+                <profile>
+                        <id>download_readme_resources_to_temp_dir</id>
+                        <dependencies>
+                                <dependency>
+                                        <groupId>com.ericsson.myplugin</groupId>
+                                        <artifactId>readme-markdown-resources</artifactId>
+                                        <version>0.0.1</version>
+                                </dependency>
+                        </dependencies>
+                        <build>
+                                <plugins>
+                                                <plugin>
+                                                        <groupId>org.apache.maven.plugins</groupId>
+                                                        <artifactId>maven-dependency-plugin</artifactId>
+                                                        <version>2.4</version>
+                                                        <inherited>false</inherited>
+                                                        <executions>
+                                                                <execution>
+                                                                        <id>unpack-readme-properties-file</id>
+                                                                        <goals>
+                                                                                <goal>unpack-dependencies</goal>
+                                                                        </goals>
+                                                                        <phase>initialize</phase>
+                                                                        <configuration>
+                                                                                <includes>*</includes>
+                                                                                <outputDirectory>./readme_temp/</outputDirectory>
+                                                                                <includeArtifactIds>readme-markdown-resources</includeArtifactIds>
+                                                                                <overWriteIfNewer>true</overWriteIfNewer>
+                                                                        </configuration>
+                                                                </execution>
+                                                        </executions>
+                                                </plugin>
+                                </plugins>
+                        </build>
+                </profile>
+
+
+                <!--
+                <profile>
+                        <id>generate_readme_use_plugin</id>
+                        <dependencies>
+                                <dependency>
+                                        <groupId>com.ericsson.myplugin</groupId>
+                                        <artifactId>readme-markdown-plugin</artifactId>
+                                        <version>0.0.1</version>
+                                </dependency>
+                        </dependencies>
+                        <build>
+                                <plugins>
+                                        <plugin>
+                                                <groupId>org.codehaus.mojo</groupId>
+                                                <artifactId>properties-maven-plugin</artifactId>
+                                                <version>1.0.0</version>
+                                                <inherited>false</inherited>
+                                                <executions>
+                                                        <execution>
+                                                                <id>read-properties-readme-file</id>
+                                                                <phase>generate-resources</phase>
+                                                                <goals>
+                                                                        <goal>read-project-properties</goal>
+                                                                </goals>
+                                                                <configuration>
+                                                                        <files>
+                                                                                <file>./readme_temp/readme.properties</file>
+                                                                        </files>
+                                                                </configuration>
+                                                        </execution>
+                                                </executions>
+                                        </plugin>
+                                        <plugin>
+                                                <groupId>com.ericsson.myplugin</groupId>
+                                                <artifactId>readme-markdown-plugin</artifactId>
+                                                <version>0.0.1</version>
+                                                <inherited>false</inherited>
+                                                <executions>
+                                                        <execution>
+                                                                <id>execute-readme-plugin</id>
+                                                                <phase>generate-resources</phase>
+                                                                <goals>
+                                                                        <goal>readme</goal>
+                                                                </goals>
+                                                        </execution>
+                                                </executions>
+                                        </plugin>
+                                        <plugin>
+                                                <groupId>org.apache.maven.plugins</groupId>
+                                                <artifactId>maven-resources-plugin</artifactId>
+                                                <version>3.3.1</version>
+                                                <inherited>false</inherited>
+                                                <executions>
+                                                        <execution>
+                                                                <id>generate-readme-file</id>
+                                                                <phase>process-resources</phase>
+                                                                <goals>
+                                                                        <goal>copy-resources</goal>
+                                                                </goals>
+                                                                <configuration>
+                                                                        <outputDirectory>${project.basedir}</outputDirectory>
+                                                                        <resources>
+                                                                                <resource>
+                                                                                        <directory>${project.basedir}/readme_temp</directory>
+                                                                                        <includes>
+                                                                                                <include>readme.md</include>
+                                                                                        </includes>
+                                                                                        <filtering>true</filtering>
+                                                                                </resource>
+                                                                        </resources>
+                                                                        <overwrite>true</overwrite>
+                                                                </configuration>
+                                                        </execution>
+                                                </executions>
+                                        </plugin>
+
+                                </plugins>
+                        </build>
+                </profile> -->
+
+                <!-- Steps for readme.md creation
+                        1. Download profile     e.g. mvn clean install -Pdownload_readme_resources
+                        2. Manually update the properties file
+                        3. Generate readme from propertie file e.g. mvn clean install -Pgenerate_from_properties_using_maven_filtering
+        -->
+
+                <profile>
+                        <!-- Unpacks the readme template properties file to src/main/resources directory-->
+                        <id>download_readme_resources</id>
+                        <dependencies>
+                                <dependency>
+                                        <groupId>com.ericsson.myplugin</groupId>
+                                        <artifactId>readme-markdown-resources</artifactId>
+                                        <version>0.0.1</version>
+                                </dependency>
+                        </dependencies>
+                        <build>
+                                <plugins>
+                                        <plugin>
+                                                <groupId>org.apache.maven.plugins</groupId>
+                                                <artifactId>maven-dependency-plugin</artifactId>
+                                                <version>2.4</version>
+                                                <inherited>false</inherited>
+                                                <executions>
+                                                        <execution>
+                                                                <id>unpack-readme-properties-file</id>
+                                                                <goals>
+                                                                        <goal>unpack-dependencies</goal>
+                                                                </goals>
+                                                                <phase>initialize</phase>
+                                                                <configuration>
+                                                                        <includes>*</includes>
+                                                                        <outputDirectory>${project.basedir}/src/main/resources</outputDirectory>
+                                                                        <includeArtifactIds>readme-markdown-resources</includeArtifactIds>
+                                                                        <overWriteIfNewer>true</overWriteIfNewer>
+                                                                </configuration>
+                                                        </execution>
+                                                </executions>
+                                        </plugin>
+                                </plugins>
+                        </build>
+                </profile>
+
+                <profile>
+                        <id>generate_from_properties_using_maven_filtering</id>
+                        <build>
+                                <plugins>
+                                        <!-- read the properties file -->
+                                        <plugin>
+                                                <groupId>org.codehaus.mojo</groupId>
+                                                <artifactId>properties-maven-plugin</artifactId>
+                                                <version>1.0.0</version>
+                                                <inherited>false</inherited>
+                                                <executions>
+                                                        <execution>
+                                                                <id>read-properties-readme-file</id>
+                                                                <phase>generate-resources</phase>
+                                                                <goals>
+                                                                        <goal>read-project-properties</goal>
+                                                                </goals>
+                                                                <configuration>
+                                                                        <files>
+                                                                                <file>src/main/resources/readme.properties</file>
+                                                                        </files>
+                                                                </configuration>
+                                                        </execution>
+                                                </executions>
+                                        </plugin>
+
+                                        <!-- inject property values using maven filtering to generate the readme.md -->
+                                        <plugin>
+                                                <groupId>org.apache.maven.plugins</groupId>
+                                                <artifactId>maven-resources-plugin</artifactId>
+                                                <version>3.3.1</version>
+                                                <inherited>false</inherited>
+                                                <executions>
+                                                        <execution>
+                                                                <id>generate-readme-file</id>
+                                                                <phase>process-resources</phase>
+                                                                <goals>
+                                                                        <goal>copy-resources</goal>
+                                                                </goals>
+                                                                <configuration>
+                                                                        <outputDirectory>${project.basedir}</outputDirectory>
+                                                                        <resources>
+                                                                                <resource>
+                                                                                        <directory>${project.basedir}/src/main/resources</directory>
+                                                                                        <includes>
+                                                                                                <include>readme.md</include>
+                                                                                        </includes>
+                                                                                        <filtering>true</filtering>
+                                                                                </resource>
+                                                                        </resources>
+                                                                        <overwrite>true</overwrite>
+                                                                </configuration>
+                                                        </execution>
+                                                </executions>
+                                        </plugin>
+
+                                </plugins>
+                        </build>
+                </profile>
+
+                <!--
+                <profile>
+                        <id>readme_use_plugin</id>
+                        <dependencies>
+                                <dependency>
+                                        <groupId>com.ericsson.myplugin</groupId>
+                                        <artifactId>readme-markdown-resources</artifactId>
+                                        <version>0.0.1</version>
+                                </dependency>
+                        </dependencies>
+                        <build>
+                                <plugins>
+                                        <plugin>
+                                                <groupId>org.apache.maven.plugins</groupId>
+                                                <artifactId>maven-dependency-plugin</artifactId>
+                                                <version>2.4</version>
+                                                <inherited>false</inherited>
+                                                <executions>
+                                                        <execution>
+                                                                <id>unpack-readme-properties-file</id>
+                                                                <goals>
+                                                                        <goal>unpack-dependencies</goal>
+                                                                </goals>
+                                                                <phase>initialize</phase>
+                                                                <configuration>
+                                                                        <includes>*</includes>
+                                                                        <outputDirectory>${project.basedir}/src/main/resources</outputDirectory>
+                                                                        <includeArtifactIds>readme-markdown-resources</includeArtifactIds>
+                                                                        <overWriteIfNewer>false</overWriteIfNewer>
+                                                                </configuration>
+                                                        </execution>
+                                                </executions>
+                                        </plugin>
+                                        <plugin>
+                                                <groupId>org.codehaus.mojo</groupId>
+                                                <artifactId>properties-maven-plugin</artifactId>
+                                                <version>1.0.0</version>
+                                                <inherited>false</inherited>
+                                                <executions>
+                                                        <execution>
+                                                                <id>read-properties-readme-file</id>
+                                                                <phase>generate-resources</phase>
+                                                                <goals>
+                                                                        <goal>read-project-properties</goal>
+                                                                </goals>
+                                                                <configuration>
+                                                                        <files>
+                                                                                <file>src/main/resources/readme.properties</file>
+                                                                        </files>
+                                                                </configuration>
+                                                        </execution>
+                                                </executions>
+                                        </plugin>
+                                </plugins>
+                        </build>
+                </profile> -->
+
+
+
+        </profiles>
+        <build>
+				<plugins>
+                        <plugin>
+                                <groupId>org.jboss.as.plugins</groupId>
+                                <artifactId>jboss-as-maven-plugin</artifactId>
+                                <configuration>
+                                        <filename>${project.parent.artifactId}.${project.packaging}</filename>
+                                        <skip>false</skip>
+                                </configuration>
+                        </plugin>
+                </plugins>
+        </build>
+        <profiles>
+
+                <profile>
+                        <id>download_readme_resources_to_temp_dir</id>
+                        <dependencies>
+                                <dependency>
+                                        <groupId>com.ericsson.myplugin</groupId>
+                                        <artifactId>readme-markdown-resources</artifactId>
+                                        <version>0.0.2</version>
+                                </dependency>
+                        </dependencies>
+                        <build>
+                                <plugins>
+                                                <plugin>
+                                                        <groupId>org.apache.maven.plugins</groupId>
+                                                        <artifactId>maven-dependency-plugin</artifactId>
+                                                        <version>2.4</version>
+                                                        <inherited>false</inherited>
+                                                        <executions>
+                                                                <execution>
+                                                                        <id>unpack-readme-properties-file</id>
+                                                                        <goals>
+                                                                                <goal>unpack-dependencies</goal>
+                                                                        </goals>
+                                                                        <phase>initialize</phase>
+                                                                        <configuration>
+                                                                                <includes>*</includes>
+                                                                                <outputDirectory>./readme_temp/</outputDirectory>
+                                                                                <includeArtifactIds>readme-markdown-resources</includeArtifactIds>
+                                                                                <overWriteIfNewer>true</overWriteIfNewer>
+                                                                        </configuration>
+                                                                </execution>
+                                                        </executions>
+                                                </plugin>
+                                </plugins>
+                        </build>
+                </profile>
+
+
+                <!--
+                <profile>
+                        <id>generate_readme_use_plugin</id>
+                        <dependencies>
+                                <dependency>
+                                        <groupId>com.ericsson.myplugin</groupId>
+                                        <artifactId>readme-markdown-plugin</artifactId>
+                                        <version>0.0.1</version>
+                                </dependency>
+                        </dependencies>
+                        <build>
+                                <plugins>
+                                        <plugin>
+                                                <groupId>org.codehaus.mojo</groupId>
+                                                <artifactId>properties-maven-plugin</artifactId>
+                                                <version>1.0.0</version>
+                                                <inherited>false</inherited>
+                                                <executions>
+                                                        <execution>
+                                                                <id>read-properties-readme-file</id>
+                                                                <phase>generate-resources</phase>
+                                                                <goals>
+                                                                        <goal>read-project-properties</goal>
+                                                                </goals>
+                                                                <configuration>
+                                                                        <files>
+                                                                                <file>./readme_temp/readme.properties</file>
+                                                                        </files>
+                                                                </configuration>
+                                                        </execution>
+                                                </executions>
+                                        </plugin>
+                                        <plugin>
+                                                <groupId>com.ericsson.myplugin</groupId>
+                                                <artifactId>readme-markdown-plugin</artifactId>
+                                                <version>0.0.1</version>
+                                                <inherited>false</inherited>
+                                                <executions>
+                                                        <execution>
+                                                                <id>execute-readme-plugin</id>
+                                                                <phase>generate-resources</phase>
+                                                                <goals>
+                                                                        <goal>readme</goal>
+                                                                </goals>
+                                                        </execution>
+                                                </executions>
+                                        </plugin>
+                                        <plugin>
+                                                <groupId>org.apache.maven.plugins</groupId>
+                                                <artifactId>maven-resources-plugin</artifactId>
+                                                <version>3.3.1</version>
+                                                <inherited>false</inherited>
+                                                <executions>
+                                                        <execution>
+                                                                <id>generate-readme-file</id>
+                                                                <phase>process-resources</phase>
+                                                                <goals>
+                                                                        <goal>copy-resources</goal>
+                                                                </goals>
+                                                                <configuration>
+                                                                        <outputDirectory>${project.basedir}</outputDirectory>
+                                                                        <resources>
+                                                                                <resource>
+                                                                                        <directory>${project.basedir}/readme_temp</directory>
+                                                                                        <includes>
+                                                                                                <include>readme.md</include>
+                                                                                        </includes>
+                                                                                        <filtering>true</filtering>
+                                                                                </resource>
+                                                                        </resources>
+                                                                        <overwrite>true</overwrite>
+                                                                </configuration>
+                                                        </execution>
+                                                </executions>
+                                        </plugin>
+
+                                </plugins>
+                        </build>
+                </profile> -->
+
+                <!-- Steps for readme.md creation
+                        1. Download profile     e.g. mvn clean install -Pdownload_readme_resources
+                        2. Manually update the properties file
+                        3. Generate readme from propertie file e.g. mvn clean install -Pgenerate_from_properties_using_maven_filtering
+        -->
+
+                <profile>
+                        <!-- Unpacks the readme template properties file to src/main/resources directory-->
+                        <id>download_readme_resources</id>
+                        <dependencies>
+                                <dependency>
+                                        <groupId>com.ericsson.myplugin</groupId>
+                                        <artifactId>readme-markdown-resources</artifactId>
+                                        <version>0.0.1</version>
+                                </dependency>
+                        </dependencies>
+                        <build>
+                                <plugins>
+                                        <plugin>
+                                                <groupId>org.apache.maven.plugins</groupId>
+                                                <artifactId>maven-dependency-plugin</artifactId>
+                                                <version>2.4</version>
+                                                <inherited>false</inherited>
+                                                <executions>
+                                                        <execution>
+                                                                <id>unpack-readme-properties-file</id>
+                                                                <goals>
+                                                                        <goal>unpack-dependencies</goal>
+                                                                </goals>
+                                                                <phase>initialize</phase>
+                                                                <configuration>
+                                                                        <includes>*</includes>
+                                                                        <outputDirectory>${project.basedir}/src/main/resources</outputDirectory>
+                                                                        <includeArtifactIds>readme-markdown-resources</includeArtifactIds>
+                                                                        <overWriteIfNewer>true</overWriteIfNewer>
+                                                                </configuration>
+                                                        </execution>
+                                                </executions>
+                                        </plugin>
+                                </plugins>
+                        </build>
+                </profile>
+
+                <profile>
+                        <id>generate_from_properties_using_maven_filtering</id>
+                        <build>
+                                <plugins>
+                                        <!-- read the properties file -->
+                                        <plugin>
+                                                <groupId>org.codehaus.mojo</groupId>
+                                                <artifactId>properties-maven-plugin</artifactId>
+                                                <version>1.0.0</version>
+                                                <inherited>false</inherited>
+                                                <executions>
+                                                        <execution>
+                                                                <id>read-properties-readme-file</id>
+                                                                <phase>generate-resources</phase>
+                                                                <goals>
+                                                                        <goal>read-project-properties</goal>
+                                                                </goals>
+                                                                <configuration>
+                                                                        <files>
+                                                                                <file>src/main/resources/readme.properties</file>
+                                                                        </files>
+                                                                </configuration>
+                                                        </execution>
+                                                </executions>
+                                        </plugin>
+
+                                        <!-- inject property values using maven filtering to generate the readme.md -->
+                                        <plugin>
+                                                <groupId>org.apache.maven.plugins</groupId>
+                                                <artifactId>maven-resources-plugin</artifactId>
+                                                <version>3.3.1</version>
+                                                <inherited>false</inherited>
+                                                <executions>
+                                                        <execution>
+                                                                <id>generate-readme-file</id>
+                                                                <phase>process-resources</phase>
+                                                                <goals>
+                                                                        <goal>copy-resources</goal>
+                                                                </goals>
+                                                                <configuration>
+                                                                        <outputDirectory>${project.basedir}</outputDirectory>
+                                                                        <resources>
+                                                                                <resource>
+                                                                                        <directory>${project.basedir}/src/main/resources</directory>
+                                                                                        <includes>
+                                                                                                <include>readme.md</include>
+                                                                                        </includes>
+                                                                                        <filtering>true</filtering>
+                                                                                </resource>
+                                                                        </resources>
+                                                                        <overwrite>true</overwrite>
+                                                                </configuration>
+                                                        </execution>
+                                                </executions>
+                                        </plugin>
+
+                                </plugins>
+                        </build>
+                </profile>
+
+                <!--
+                <profile>
+                        <id>readme_use_plugin</id>
+                        <dependencies>
+                                <dependency>
+                                        <groupId>com.ericsson.myplugin</groupId>
+                                        <artifactId>readme-markdown-resources</artifactId>
+                                        <version>0.0.1</version>
+                                </dependency>
+                        </dependencies>
+                        <build>
+                                <plugins>
+                                        <plugin>
+                                                <groupId>org.apache.maven.plugins</groupId>
+                                                <artifactId>maven-dependency-plugin</artifactId>
+                                                <version>2.4</version>
+                                                <inherited>false</inherited>
+                                                <executions>
+                                                        <execution>
+                                                                <id>unpack-readme-properties-file</id>
+                                                                <goals>
+                                                                        <goal>unpack-dependencies</goal>
+                                                                </goals>
+                                                                <phase>initialize</phase>
+                                                                <configuration>
+                                                                        <includes>*</includes>
+                                                                        <outputDirectory>${project.basedir}/src/main/resources</outputDirectory>
+                                                                        <includeArtifactIds>readme-markdown-resources</includeArtifactIds>
+                                                                        <overWriteIfNewer>false</overWriteIfNewer>
+                                                                </configuration>
+                                                        </execution>
+                                                </executions>
+                                        </plugin>
+                                        <plugin>
+                                                <groupId>org.codehaus.mojo</groupId>
+                                                <artifactId>properties-maven-plugin</artifactId>
+                                                <version>1.0.0</version>
+                                                <inherited>false</inherited>
+                                                <executions>
+                                                        <execution>
+                                                                <id>read-properties-readme-file</id>
+                                                                <phase>generate-resources</phase>
+                                                                <goals>
+                                                                        <goal>read-project-properties</goal>
+                                                                </goals>
+                                                                <configuration>
+                                                                        <files>
+                                                                                <file>src/main/resources/readme.properties</file>
+                                                                        </files>
+                                                                </configuration>
+                                                        </execution>
+                                                </executions>
+                                        </plugin>
+                                </plugins>
+                        </build>
+                </profile> -->
+
+
+
+        </profiles>
+</project>

@@ -1,0 +1,216 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<artifactId>ciexe_test_jar</artifactId>
+		<groupId>com.ericsson.oss.ci</groupId>
+		<version>2.1.107-SNAPSHOT</version>
+	</parent>
+	<artifactId>ERICwdsafgdsf_CXP9035436</artifactId>
+	<name>WFS RPM</name>
+	<packaging>${rpm.packaging}</packaging>
+	<properties>
+		<com.ericsson.oss.rpm.architecture>noarch</com.ericsson.oss.rpm.architecture>
+		<rpm-root>opt</rpm-root>
+		<comp-name>ericsson</comp-name>
+		<install-path>${project.groupId}</install-path>
+		<maven.site.skip>true</maven.site.skip>
+		<maven.site.deploy.skip>true</maven.site.deploy.skip>
+		<jboss.modules.install.wfs-api.location>${eap.ext.modules.dir}/com/ericsson/oss/services/wfs/api/main/</jboss.modules.install.wfs-api.location>
+		<jboss.modules.install.wfs-camunda-plugins.location>${eap.ext.modules.dir}/com/ericsson/oss/services/wfs/camunda-plugins/main/</jboss.modules.install.wfs-camunda-plugins.location>
+		<jboss.modules.gson.install.location>${eap.ext.modules.dir}/com/ericsson/oss/services/wfs/gson/main/</jboss.modules.gson.install.location>
+		<publish_artifact>false</publish_artifact>
+		<media.category>service</media.category>
+	</properties>
+
+	<dependencies>
+		<dependency>
+			<groupId>com.ericsson.oss.services.wfs</groupId>
+			<artifactId>wfs-jee-ear</artifactId>
+			<type>ear</type>
+			<version>${version.wfs}</version>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.jboss.as.plugins</groupId>
+				<artifactId>jboss-as-maven-plugin</artifactId>
+				<configuration>
+					<skip>true</skip>
+				</configuration>
+			</plugin>
+			<plugin>
+			    <groupId>org.jacoco</groupId>
+			    <artifactId>jacoco-maven-plugin</artifactId>
+			    <configuration>
+			        <skip>true</skip>
+			    </configuration>
+			</plugin>
+		</plugins>
+	</build>
+
+     <profiles>
+	<profile>
+	<activation>
+ 		<os>
+		<family>Linux</family>
+		</os>
+	</activation>
+	<build>	
+	   <plugins>
+		<plugin>
+		   <groupId>org.apache.maven.plugins</groupId>
+		   <artifactId>maven-dependency-plugin</artifactId>
+		    <version>2.2</version>
+		    <executions>
+		      <execution>
+		        <id>unpack</id>
+		        <phase>generate-resources</phase>
+		        <goals>
+		          <goal>unpack</goal>
+		        </goals>
+		        <configuration>
+		         	 <artifactItems>
+		                  <artifactItem>
+		                       <groupId>com.ericsson.oss.services.wfs</groupId>
+		                       <artifactId>wfs-jboss-module</artifactId>
+		                       <version>${version.wfs}</version>
+		                       <type>tar.gz</type>
+		                 </artifactItem>
+		               </artifactItems>    
+		               <outputDirectory>${project.build.directory}</outputDirectory>
+		        </configuration>
+		      </execution>
+		    </executions>
+		</plugin>
+		<plugin>
+		  <groupId>org.codehaus.mojo</groupId>
+		  <artifactId>rpm-maven-plugin</artifactId>
+		  <executions>
+			<execution>
+				<goals>
+				    <goal>rpm</goal>
+				</goals>
+			</execution>
+		  </executions>
+		  <configuration>
+			<defineStatement>_tmppath /tmp</defineStatement>
+			<mappings combine.self="override">
+			<mapping>
+			<!-- This mapping copies the wfs-ear dependency  -->
+				<directory>/${rpm-root}/${comp-name}/${install-path}/</directory>
+				<filemode>775</filemode>
+				<username>litp_jboss</username>
+				<groupname>litp_jboss</groupname>
+				<configuration>false</configuration>
+				<directoryIncluded>true</directoryIncluded>
+				<recurseDirectories>true</recurseDirectories>
+				<dependency>
+					<includes>
+						<include>${project.groupId}:wfs-jee-ear</include>
+					</includes>
+				</dependency>
+			</mapping>
+			<mapping>
+			<!-- This mapping copies the wfs-ear dependency  -->
+				<directory>${vm.install-path}</directory>
+				<filemode>500</filemode>
+				<username>${jboss-username}</username>
+				<groupname>${jboss-groupname}</groupname>
+				<configuration>false</configuration>
+				<directoryIncluded>true</directoryIncluded>
+				<recurseDirectories>true</recurseDirectories>
+				<dependency>
+					<includes>
+						<include>${project.groupId}:wfs-jee-ear</include>
+					</includes>
+				</dependency>
+			</mapping>
+
+			<mapping>
+			   <directory>${jboss.modules.install.wfs-api.location}</directory>
+			   <!-- Read and execute -->
+			   <filemode>555</filemode>
+			   <username>litp_jboss</username>
+			   <groupname>litp_jboss</groupname>
+			   <configuration>false</configuration>
+			   <directoryIncluded>true</directoryIncluded>
+			   <recurseDirectories>true</recurseDirectories> 
+				<dependency>
+					<excludes>
+						<exclude>${project.groupId}:wfs-jee-ear</exclude>
+					</excludes>
+				</dependency>								
+			   <sources>
+				<source>
+				    <location>${project.build.directory}/com/ericsson/oss/services/wfs/api/main/</location>
+				    <includes>
+						<include>wfs-api-${version.wfs}.jar</include>
+						<include>wfs-task-api-${version.wfs}.jar</include>
+						<include>wfs-jee-int-${version.wfs}.jar</include>
+						<include>wfs-jee-task-${version.wfs}.jar</include>
+						<include>wfs-jse-${version.wfs}.jar</include>												
+						<include>wfs-bpmn-model-${version.wfs}.jar</include>
+						<include>wfs-model-jar-${version.wfs-model}.jar</include>
+						<include>wfs-jee-local-api-${version.wfs}.jar</include>
+						<include>module.xml</include>			
+				    </includes>
+				</source>				
+			   </sources>
+			</mapping>
+
+			<mapping>
+			   <directory>${jboss.modules.install.wfs-camunda-plugins.location}</directory>
+			   <!-- Read and execute -->
+			   <filemode>555</filemode>
+			   <username>litp_jboss</username>
+			   <groupname>litp_jboss</groupname>
+			   <configuration>false</configuration>
+			   <directoryIncluded>true</directoryIncluded>
+			   <recurseDirectories>true</recurseDirectories>
+			   <sources>
+				<source>
+				    <location>${project.build.directory}/com/ericsson/oss/services/wfs/camunda-plugins/main/</location>
+				    <includes>
+						<include>wfs-camunda-plugins-${version.wfs}.jar</include>
+						<include>module.xml</include>
+				    </includes>
+				</source>
+			   </sources>
+			</mapping>
+
+			<mapping>
+			   <directory>${jboss.modules.gson.install.location}</directory>
+			   <!-- Read and execute -->
+			   <filemode>555</filemode>
+			   <username>litp_jboss</username>
+			   <groupname>litp_jboss</groupname>
+			   <configuration>false</configuration>
+			   <directoryIncluded>true</directoryIncluded>
+			   <recurseDirectories>true</recurseDirectories> 
+				<dependency>
+					<excludes>
+						<exclude>${project.groupId}:wfs-jee-ear</exclude>
+					</excludes>
+				</dependency>								
+			   <sources>
+				<source>
+				    <location>${project.build.directory}/com/ericsson/oss/services/wfs/gson/main/</location>
+				    <includes>
+						<include>gson-${version.gson}.jar</include>
+						<include>module.xml</include>			
+				    </includes>
+				</source>				
+			   </sources>
+			   </mapping>
+			</mappings>
+		</configuration>
+	   </plugin>
+	</plugins>		
+	</build>
+</profile>
+</profiles>
+	
+</project>
